@@ -8,8 +8,10 @@
       involving an intermediary proxy table, since the __newindex event happens only for absent keys.
       So, we don't set up a tracking table of niled elements for it.
 --]]
+do
 
-local NIL = {}
+
+local NIL = {}  -- a unique key
 
 
 function setprototype(_self, _prototype)
@@ -79,8 +81,24 @@ function setprototype(_self, _prototype)
   return _self
 end
 
-function getprototype(_self)
-  return rawget(getmetatable(_self) or {}, "__index")
+function getprototype(_object)
+  return rawget(getmetatable(_object) or {}, "__index")
+end
+
+function prototypechain(_object)
+  local level, mt = 0, getmetatable(_object)
+
+  local function nextprototype()
+    local prototype = nil
+    if mt then
+      level = level + 1
+      prototype = rawget(mt, "__index")
+      mt = getmetatable(prototype)
+    end
+    return prototype and level, prototype
+  end
+
+  return nextprototype
 end
 
 
@@ -101,18 +119,28 @@ function setconstructor(_self, _function)
   return _self
 end
 
-function getconstructor(_self)
-  return rawget(getmetatable(_self) or {}, "constructor")
+function getconstructor(_object)
+  return rawget(getmetatable(_object) or {}, "constructor")
 end
 
 
-function hasprototype(_self, _subobject)
-  -- TODO --
+function memberpairs(_object)
+  local k, t = nil, _object
+
+  local function nextmemberpair()
+    local v = nil
+    k, v = next(t, k)
+    if k == nil then
+      local mt = getmetatable(t)
+      t = mt and rawget(mt, "__index")
+      if t then k, v = next(t) end
+    end
+    return k, v, t
+  end
+
+  return nextmemberpair
 end
 
-function isa(_object, _constructor)
-  -- TODO --
+
 end
-
-
 --}michaelus}

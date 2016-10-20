@@ -79,4 +79,12 @@ c.ghi, c.jkl = nil, nil;
 c.ghi, c.jkl = -3, -4
 printtable(c, "[C] "); printtable(getprototype(c), "[B] "); printtable(getprototype(getprototype(c)), "[A] ")
 
+for i, p in prototypechain(c) do
+  print(i, p)
+end
+
+for k, v, t in memberpairs(c) do
+  print(k, v, "(sub-object "..tostring(t)..")")
+end
+
 --}michaelus}
