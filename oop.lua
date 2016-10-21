@@ -11,7 +11,7 @@
 do
 
 
-local NIL = {}  -- a unique key
+local NIL = {}  -- some unique key
 
 
 function setprototype(_self, _prototype)
@@ -29,7 +29,7 @@ function setprototype(_self, _prototype)
         is_nil = true
         break
       end
-      t = rawget(mt, "__index")  -- next sub-object in the chain
+      t = rawget(mt, "__index")  -- the next sub-object in the chain
       if not t then break end
       if rawget(t, _k) then
         exist = true
@@ -74,6 +74,35 @@ function setprototype(_self, _prototype)
   else
     mt = { __index = _prototype, __newindex = newindex }
     -- mt[NIL] = setmetatable({}, { __mode = "k" })
+    mt.__metatable = mt  -- protect metatable
+    setmetatable(_self, mt)
+  end
+
+  return _self
+end
+
+function setweakprototype(_self, _prototype)
+  if type(_prototype) ~= "table" then
+    error("'setweakprototype' argument must be a table", 2)
+  end
+
+  local function newindex(_t, _k, _v)
+    local t = rawget(getmetatable(_t), "__index")  -- the next sub-object in the chain
+    if t and t[_k] ~= nil then  -- a regular indexing access that checks
+                                -- if the key exists within the prototype chain
+      t[_k] = _v  -- a regular assignment causing the __newindex metamethod
+                  -- when the key is not present in that sub-object
+    else
+      rawset(_t, _k, _v)
+    end
+  end
+
+  local mt = getmetatable(_self)
+  if mt then
+    rawset(mt, "__index", _prototype)
+    rawset(mt, "__newindex", newindex)
+  else
+    mt = { __index = _prototype, __newindex = newindex }
     mt.__metatable = mt  -- protect metatable
     setmetatable(_self, mt)
   end

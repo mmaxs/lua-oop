@@ -1,10 +1,10 @@
 #! /usr/bin/env lua-5.1
 --{michaelus{
 
--- require "oop-lite"
 require "oop"
 require "printtable"
 
+setprototype = setweakprototype
 
 function A(_abc)
   print("constructor A: ", A)
