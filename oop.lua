@@ -1,19 +1,19 @@
---{michaelus{
 --[[ oop.lua - lua object oriented pornography ]]--
 --[[
-      Niled elements are tracked properly:
-      on new assignment they will appear in the proper sub-object within the prototype chain.
 
-      Nilifying existent elements of the most outer sub-object cannot be tracked without
-      involving an intermediary proxy table, since the __newindex event happens only for absent keys.
-      So, we don't set up a tracking table of niled elements for it.
 --]]
 do
 
 
-local NIL = {}  -- some unique key
+local NIL = {}  -- to be used as a unique key and as a definitely empty table
 
 
+--[[ Niled elements are tracked properly:
+     on new assignment they will appear in the proper sub-object within the prototype chain.
+
+     Nilifying existent elements of the most outer sub-object cannot be tracked without
+     involving an intermediary proxy table, since the __newindex event happens only for absent keys.
+     So, we don't set up a tracking table of niled elements for it. --]]
 function setprototype(_self, _prototype)
   if type(_prototype) ~= "table" then
     error("'setprototype' argument must be a table", 2)
@@ -24,14 +24,14 @@ function setprototype(_self, _prototype)
     while true do  -- look for the key along the prototype chain
       mt = getmetatable(t)
       if not mt then break end
-      if rawget(rawget(mt, NIL) or {}, _k) then  -- firstly peek into the tracking table for the niled elements of the current sub-object
+      if rawget(rawget(mt, NIL) or NIL, _k) then  -- firstly peek into the tracking table for the niled elements of the current sub-object
         exist = true
         is_nil = true
         break
       end
       t = rawget(mt, "__index")  -- the next sub-object in the chain
       if not t then break end
-      if rawget(t, _k) then
+      if rawget(t, _k) ~= nil then
         exist = true
         break
       end
@@ -47,7 +47,7 @@ function setprototype(_self, _prototype)
         if _v == nil then
           mt = getmetatable(t)
           if mt then
-            t = rawget(mt, NIL)  -- tracking table
+            t = rawget(mt, NIL)  -- the tracking table
             if t then
               rawset(t, _k, true)
             else
@@ -86,6 +86,7 @@ function setweakprototype(_self, _prototype)
     error("'setweakprototype' argument must be a table", 2)
   end
 
+  --[[
   local function newindex(_t, _k, _v)
     local t = rawget(getmetatable(_t), "__index")  -- the next sub-object in the chain
     if t and t[_k] ~= nil then  -- a regular indexing access that checks
@@ -95,6 +96,15 @@ function setweakprototype(_self, _prototype)
     else
       rawset(_t, _k, _v)
     end
+  end
+  --]]
+  local function newindex(_t, _k, _v)
+    local t = rawget(getmetatable(_t), "__index")
+    while t do
+      if rawget(t, _k) ~= nil then break end
+      t = rawget(getmetatable(t) or NIL, "__index")
+    end
+    rawset(t or _t, _k, _v)
   end
 
   local mt = getmetatable(_self)
@@ -111,10 +121,10 @@ function setweakprototype(_self, _prototype)
 end
 
 function getprototype(_object)
-  return rawget(getmetatable(_object) or {}, "__index")
+  return rawget(getmetatable(_object) or NIL, "__index")
 end
 
-function prototypechain(_object)
+function prototypes(_object)
   local level, mt = 0, getmetatable(_object)
 
   local function nextprototype()
@@ -149,7 +159,7 @@ function setconstructor(_self, _function)
 end
 
 function getconstructor(_object)
-  return rawget(getmetatable(_object) or {}, "constructor")
+  return rawget(getmetatable(_object) or NIL, "constructor")
 end
 
 
@@ -172,4 +182,3 @@ end
 
 
 end
---}michaelus}
