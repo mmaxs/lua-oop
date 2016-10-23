@@ -1,6 +1,21 @@
 --[[ oop.lua - lua object oriented pornography ]]--
---[[
 
+--[[
+     Prototype-based style of object-oriented programming can be failry naturally implemented in Lua
+     by means of using the `__index` metamethod.
+
+     setprototype()
+     setcowprototype()
+                      copy-on-write
+
+
+     setconstructor()
+     getconstructor()
+
+     getprototype()
+     prototypes()
+
+     memberpairs()
 --]]
 do
 
@@ -81,9 +96,9 @@ function setprototype(_self, _prototype)
   return _self
 end
 
-function setweakprototype(_self, _prototype)
+function setcowprototype(_self, _prototype)
   if type(_prototype) ~= "table" then
-    error("'setweakprototype' argument must be a table", 2)
+    error("'setcowprototype' argument must be a table", 2)
   end
 
   --[[
@@ -110,9 +125,10 @@ function setweakprototype(_self, _prototype)
   local mt = getmetatable(_self)
   if mt then
     rawset(mt, "__index", _prototype)
-    rawset(mt, "__newindex", newindex)
+    -- rawset(mt, "__newindex", newindex)
   else
-    mt = { __index = _prototype, __newindex = newindex }
+    mt = { __index = _prototype }
+    -- mt.__newindex = newindex
     mt.__metatable = mt  -- protect metatable
     setmetatable(_self, mt)
   end
