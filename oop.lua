@@ -14,6 +14,7 @@
 
      getprototype()
      prototypes()
+     unsetprototype()
 
      memberpairs()
 --]]
@@ -35,11 +36,13 @@ function setprototype(_self, _prototype)
   end
 
   local function newindex(_t, _k, _v)
-    local t, mt, exist, is_nil = _t, nil, false, false
+    local t, mt, tt = _t, nil, nil
+    local exist, is_nil = false, false
     while true do  -- look for the key along the prototype chain
       mt = getmetatable(t)
       if not mt then break end
-      if rawget(rawget(mt, NIL) or NIL, _k) then  -- firstly peek into the tracking table for the niled elements of the current sub-object
+      tt = rawget(mt, NIL)  -- tracking table of niled members
+      if tt and rawget(tt, _k) then
         exist = true
         is_nil = true
         break
@@ -52,19 +55,18 @@ function setprototype(_self, _prototype)
       end
     end
     if exist then
+      rawset(t, _k, _v)
       if is_nil then
-        if _v ~= nil then
-          rawset(t, _k, _v)
-          rawset(rawget(mt, NIL), _k, nil)
+        if _v ~= nil then  -- remove the restored member from the table of niled ones
+          rawset(tt, _k, nil)
         end
       else
-        rawset(t, _k, _v)
-        if _v == nil then
+        if _v == nil then  -- add niled member into the tracking table
           mt = getmetatable(t)
           if mt then
-            t = rawget(mt, NIL)  -- the tracking table
-            if t then
-              rawset(t, _k, true)
+            tt = rawget(mt, NIL)
+            if tt then
+              rawset(tt, _k, true)
             else
               rawset(mt, "__newindex", newindex)
               rawset(mt, NIL, setmetatable({ [_k] = true }, { __mode = "k" }))
@@ -154,6 +156,17 @@ function prototypes(_object)
   end
 
   return nextprototype
+end
+
+function unsetprototype(_object)
+  local mt, prototype = getmetatable(_object), nil
+  if mt then
+    prototype = rawget(mt, "__index")
+    rawset(mt, "__index", nil)
+    rawset(mt, "__newindex", nil)
+  end
+
+  return prototype
 end
 
 

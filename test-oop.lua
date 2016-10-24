@@ -104,3 +104,6 @@ end
 print()
 
 
+local d = setprototype({ jkl = "d" }, C())
+printobject(d)
+
