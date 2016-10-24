@@ -23,73 +23,73 @@ do
 
 local NIL = {}  -- to be used as a unique key and as a definitely empty table
 
+local function newindex(_t, _k, _v)  -- the handler for __newindex event being set up by setprototype()
+  local t, mt, tt = _t, nil, nil
+  local exist, is_nil = false, false
+  while true do  -- look for the key along the prototype chain
+    mt = getmetatable(t)
+    if not mt then break end
+    tt = rawget(mt, NIL)  -- tracking table of niled members
+    if tt and rawget(tt, _k) then
+      exist = true
+      is_nil = true
+      break
+    end
+    t = rawget(mt, "__index")  -- the next sub-object in the chain
+    if not t then break end
+    if rawget(t, _k) ~= nil then
+      exist = true
+      break
+    end
+  end
+  if exist then
+    rawset(t, _k, _v)
+    if is_nil then
+      if _v ~= nil then  -- remove the restored member from the table of niled ones
+        rawset(tt, _k, nil)
+      end
+    else
+      if _v == nil then  -- add niled member into the tracking table
+        mt = getmetatable(t)
+        if mt then
+          tt = rawget(mt, NIL)
+          if tt then
+            rawset(tt, _k, true)
+          else
+            rawset(mt, "__newindex", newindex)
+            rawset(mt, NIL, setmetatable({ [_k] = true }, { __mode = "k" }))
+          end
+        else
+          mt = { __newindex = newindex, [NIL] = setmetatable({ [_k] = true }, { __mode = "k" }) }
+          mt.__metatable = mt  -- protect metatable
+          setmetatable(t, mt)
+        end
+      end
+    end
+  else
+    rawset(_t, _k, _v)
+  end
+end
+
 
 --[[ Niled elements are tracked properly:
-     on new assignment they will appear in the proper sub-object within the prototype chain.
-
-     Nilifying existent elements of the most outer sub-object cannot be tracked without
-     involving an intermediary proxy table, since the __newindex event happens only for absent keys.
-     So, we don't set up a tracking table of niled elements for it. --]]
+     on new assignment they will appear in the proper sub-object within the prototype chain. --]]
 function setprototype(_self, _prototype)
   if type(_prototype) ~= "table" then
     error("'setprototype' argument must be a table", 2)
-  end
-
-  local function newindex(_t, _k, _v)
-    local t, mt, tt = _t, nil, nil
-    local exist, is_nil = false, false
-    while true do  -- look for the key along the prototype chain
-      mt = getmetatable(t)
-      if not mt then break end
-      tt = rawget(mt, NIL)  -- tracking table of niled members
-      if tt and rawget(tt, _k) then
-        exist = true
-        is_nil = true
-        break
-      end
-      t = rawget(mt, "__index")  -- the next sub-object in the chain
-      if not t then break end
-      if rawget(t, _k) ~= nil then
-        exist = true
-        break
-      end
-    end
-    if exist then
-      rawset(t, _k, _v)
-      if is_nil then
-        if _v ~= nil then  -- remove the restored member from the table of niled ones
-          rawset(tt, _k, nil)
-        end
-      else
-        if _v == nil then  -- add niled member into the tracking table
-          mt = getmetatable(t)
-          if mt then
-            tt = rawget(mt, NIL)
-            if tt then
-              rawset(tt, _k, true)
-            else
-              rawset(mt, "__newindex", newindex)
-              rawset(mt, NIL, setmetatable({ [_k] = true }, { __mode = "k" }))
-            end
-          else
-            mt = { __newindex = newindex, [NIL] = setmetatable({ [_k] = true }, { __mode = "k" }) }
-            mt.__metatable = mt  -- protect metatable
-            setmetatable(t, mt)
-          end
-        end
-      end
-    else
-      rawset(_t, _k, _v)
-    end
   end
 
   local mt = getmetatable(_self)
   if mt then
     rawset(mt, "__index", _prototype)
     rawset(mt, "__newindex", newindex)
+    -- Nilifying existing members of the most outer sub-object cannot be tracked without
+    -- involving an intermediary proxy table, since the __newindex event happens only for absent keys.
+    -- So, we don't set up a tracking table of niled members for it.
     -- if not rawget(mt, NIL) then rawset(mt, NIL, setmetatable({}, { __mode = "k" })) end
   else
     mt = { __index = _prototype, __newindex = newindex }
+    -- See above.
     -- mt[NIL] = setmetatable({}, { __mode = "k" })
     mt.__metatable = mt  -- protect metatable
     setmetatable(_self, mt)
@@ -103,34 +103,11 @@ function setcowprototype(_self, _prototype)
     error("'setcowprototype' argument must be a table", 2)
   end
 
-  --[[
-  local function newindex(_t, _k, _v)
-    local t = rawget(getmetatable(_t), "__index")  -- the next sub-object in the chain
-    if t and t[_k] ~= nil then  -- a regular indexing access that checks
-                                -- if the key exists within the prototype chain
-      t[_k] = _v  -- a regular assignment causing the __newindex metamethod
-                  -- when the key is not present in that sub-object
-    else
-      rawset(_t, _k, _v)
-    end
-  end
-  --]]
-  local function newindex(_t, _k, _v)
-    local t = rawget(getmetatable(_t), "__index")
-    while t do
-      if rawget(t, _k) ~= nil then break end
-      t = rawget(getmetatable(t) or NIL, "__index")
-    end
-    rawset(t or _t, _k, _v)
-  end
-
   local mt = getmetatable(_self)
   if mt then
     rawset(mt, "__index", _prototype)
-    -- rawset(mt, "__newindex", newindex)
   else
     mt = { __index = _prototype }
-    -- mt.__newindex = newindex
     mt.__metatable = mt  -- protect metatable
     setmetatable(_self, mt)
   end
@@ -163,7 +140,9 @@ function unsetprototype(_object)
   if mt then
     prototype = rawget(mt, "__index")
     rawset(mt, "__index", nil)
-    rawset(mt, "__newindex", nil)
+    if rawget(mt, "__newindex") == newindex then
+      rawset(mt, "__newindex", nil)
+    end
   end
 
   return prototype
