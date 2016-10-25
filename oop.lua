@@ -1,7 +1,4 @@
 --[[ oop.lua - a support library for prototype-based programming in Lua ]]--
-
---[[ README.md
---]]
 do
 
 
@@ -13,7 +10,7 @@ local function newindex(_t, _k, _v)  -- the handler for __newindex event being s
   while true do  -- look for the key along the prototype chain
     mt = getmetatable(t)
     if not mt then break end
-    tt = rawget(mt, NIL)  -- tracking table of niled members
+    tt = rawget(mt, NIL)  -- tracking table of niled fields
     if tt and rawget(tt, _k) then
       exist = true
       is_nil = true
@@ -56,7 +53,7 @@ local function newindex(_t, _k, _v)  -- the handler for __newindex event being s
 end
 
 
---[[ Niled elements are tracked properly:
+--[[ Niled members are tracked properly:
      on new assignment they will appear in the proper sub-object within the prototype chain. --]]
 function setprototype(_self, _prototype)
   if type(_prototype) ~= "table" then
