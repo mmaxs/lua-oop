@@ -1,22 +1,6 @@
---[[ oop.lua - lua object oriented pornography ]]--
+--[[ oop.lua - a support library for prototype-based programming in Lua ]]--
 
---[[
-     Prototype-based style of object-oriented programming can be failry naturally implemented in Lua
-     by means of using the `__index` metamethod.
-
-     setprototype()
-     setcowprototype()
-                      copy-on-write
-
-
-     setconstructor()
-     getconstructor()
-
-     getprototype()
-     prototypes()
-     unsetprototype()
-
-     memberpairs()
+--[[ README.md
 --]]
 do
 
@@ -83,14 +67,14 @@ function setprototype(_self, _prototype)
   if mt then
     rawset(mt, "__index", _prototype)
     rawset(mt, "__newindex", newindex)
-    -- Nilifying existing members of the most outer sub-object cannot be tracked without
-    -- involving an intermediary proxy table, since the __newindex event happens only for absent keys.
+    -- Nilifying existing members of the most outer sub-object cannot be tracked without involving
+    -- an intermediary proxy table, since the __newindex event happens only for absent keys.
     -- So, we don't set up a tracking table of niled members for it.
-    -- if not rawget(mt, NIL) then rawset(mt, NIL, setmetatable({}, { __mode = "k" })) end
+    -- -- if not rawget(mt, NIL) then rawset(mt, NIL, setmetatable({}, { __mode = "k" })) end
   else
     mt = { __index = _prototype, __newindex = newindex }
     -- See above.
-    -- mt[NIL] = setmetatable({}, { __mode = "k" })
+    -- -- mt[NIL] = setmetatable({}, { __mode = "k" })
     mt.__metatable = mt  -- protect metatable
     setmetatable(_self, mt)
   end
@@ -119,6 +103,19 @@ function getprototype(_object)
   return rawget(getmetatable(_object) or NIL, "__index")
 end
 
+function unsetprototype(_object)
+  local mt, prototype = getmetatable(_object), nil
+  if mt then
+    prototype = rawget(mt, "__index")
+    rawset(mt, "__index", nil)
+    if rawget(mt, "__newindex") == newindex then
+      rawset(mt, "__newindex", nil)
+    end
+  end
+
+  return prototype
+end
+
 function prototypes(_object)
   local level, mt = 0, getmetatable(_object)
 
@@ -133,19 +130,6 @@ function prototypes(_object)
   end
 
   return nextprototype
-end
-
-function unsetprototype(_object)
-  local mt, prototype = getmetatable(_object), nil
-  if mt then
-    prototype = rawget(mt, "__index")
-    rawset(mt, "__index", nil)
-    if rawget(mt, "__newindex") == newindex then
-      rawset(mt, "__newindex", nil)
-    end
-  end
-
-  return prototype
 end
 
 
