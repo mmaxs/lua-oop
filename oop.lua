@@ -42,7 +42,6 @@ local function newindex(_t, _k, _v)  -- the handler for __newindex event being s
           end
         else
           mt = { __newindex = newindex, [NIL] = setmetatable({ [_k] = true }, { __mode = "k" }) }
-          mt.__metatable = mt  -- protect metatable
           setmetatable(t, mt)
         end
       end
@@ -52,12 +51,26 @@ local function newindex(_t, _k, _v)  -- the handler for __newindex event being s
   end
 end
 
+local function unsetprototype(_object)
+  local mt, prototype = getmetatable(_object), nil
+  if mt then
+    prototype = rawget(mt, "__index")
+    rawset(mt, "__index", nil)
+    if rawget(mt, "__newindex") == newindex then
+      rawset(mt, "__newindex", nil)
+    end
+  end
+
+  return prototype
+end
+
 
 --[[ Niled members are tracked properly:
      on new assignment they will appear in the proper sub-object within the prototype chain. --]]
 function setprototype(_self, _prototype)
-  if type(_prototype) ~= "table" then
-    error("'setprototype' argument must be a table", 2)
+  if not _prototype then
+    unsetprototype(_self)
+    return _self
   end
 
   local mt = getmetatable(_self)
@@ -72,7 +85,6 @@ function setprototype(_self, _prototype)
     mt = { __index = _prototype, __newindex = newindex }
     -- See above.
     -- -- mt[NIL] = setmetatable({}, { __mode = "k" })
-    mt.__metatable = mt  -- protect metatable
     setmetatable(_self, mt)
   end
 
@@ -80,8 +92,9 @@ function setprototype(_self, _prototype)
 end
 
 function setcowprototype(_self, _prototype)
-  if type(_prototype) ~= "table" then
-    error("'setcowprototype' argument must be a table", 2)
+  if not _prototype then
+    unsetprototype(_self)
+    return _self
   end
 
   local mt = getmetatable(_self)
@@ -89,7 +102,6 @@ function setcowprototype(_self, _prototype)
     rawset(mt, "__index", _prototype)
   else
     mt = { __index = _prototype }
-    mt.__metatable = mt  -- protect metatable
     setmetatable(_self, mt)
   end
 
@@ -98,19 +110,6 @@ end
 
 function getprototype(_object)
   return rawget(getmetatable(_object) or NIL, "__index")
-end
-
-function unsetprototype(_object)
-  local mt, prototype = getmetatable(_object), nil
-  if mt then
-    prototype = rawget(mt, "__index")
-    rawset(mt, "__index", nil)
-    if rawget(mt, "__newindex") == newindex then
-      rawset(mt, "__newindex", nil)
-    end
-  end
-
-  return prototype
 end
 
 function prototypes(_object)
@@ -131,17 +130,19 @@ end
 
 
 function setconstructor(_self, _function)
-  if type(_function) ~= "function" then
-    error("'setconstructor' argument must be a function", 2)
-  end
-
   local mt = getmetatable(_self)
-  if mt then
-    rawset(mt, "constructor", _function)
+
+  if not _function then
+    if mt then
+      rawset(mt, "constructor", nil)
+    end
   else
-    mt = { constructor = _function }
-    mt.__metatable = mt  -- protect metatable
-    setmetatable(_self, mt)
+    if mt then
+      rawset(mt, "constructor", _function)
+    else
+      mt = { constructor = _function }
+      setmetatable(_self, mt)
+    end
   end
 
   return _self

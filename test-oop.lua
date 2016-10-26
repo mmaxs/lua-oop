@@ -107,3 +107,7 @@ print()
 local d = setprototype({ jkl = "d" }, C())
 printobject(d)
 
+local e = getconstructor(b)(111, 222)
+printobject(e)
+
+
