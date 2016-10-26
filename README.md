@@ -43,7 +43,7 @@ function C(_ccc)  -- constructor for the objects of class C written in less verb
   )
 end
 ```
-After that we can at any time apply the `getconstructor()` function for obtaining the object constructor from the instance to be able to create a new instance of the same object _class_ and to use the same sort of constructing function, if there are several ones for that class.
+After that we can at any time apply the `getconstructor()` function for obtaining the object constructor from the instance to be able to create a new instance of the same object _class_ and to use the same variant of constructing function, if there are several ones for that class.
 ```lua
 local c = C()
 ...
@@ -55,7 +55,7 @@ local make_c = getconstructor(c)
 local c1, c2 = make_c(), make_c()
 
 ```
-Note that according to definitions of the example constructor functions, instances of `b1` and `b2` will have distinct sub-objects on every level of their prototype chains. Whereas, in contrast, instances of `c1` and `c2` will have distinct parts only for the most outer sub-objects in their structure and both have the very same single table `b` as the first item in their prototype chains which is also being set as copy-on-write with `setcowprototype()`.
+Note that according to definitions of our example constructor functions, instances `b1` and `b2` will have distinct sub-objects on every level of their prototype chains. Whereas, in contrast, instances `c1` and `c2` will have distinct parts only for the most outer sub-objects in their structure and both have the very same single table `b` as the first item in their prototype chains which is also being set as copy-on-write with `setcowprototype()`.
 
 
 `getprototype()`
