@@ -15,7 +15,7 @@ The function `setprototype()` modifies the metatable of the table `b` (or create
 
 Now we can consider the table `b` as an _object_ that has two _members_: field `bbb` and field `aaa`. It consists of the two _sub-objects_: the part that is the original table `b` itself with the field `bbb`, and another one disposed as the first item in the _prototype chain_ - the table from the variable `a` with the field `aaa`.
 
-Instead of `setprototype()` you can use the `setcowprototype()` function, which means to set "copy-on-write" prototype. This function is the same as the former one but it does't touch the `__newindex` metamethod. In this case the tables building up the prototype chain can be considered as read only, and every key from these tables while being assigned to is automatically copied into the most outer sub-object beforehand. Keys and values in prototype sub-objects themselves remain unaffected.
+Instead of `setprototype()` you can use the `setcowprototype()` function, which means to set "copy-on-write" prototype. This function is the same as the former one but it does't touch the `__newindex` metamethod. In this case the tables building up the prototype chain can be considered as read only, and every key from these tables is automatically copied into the most outer sub-object before performing a first assignment operation to it. Keys and values in prototype sub-objects themselves remain unaffected.
 
 Normally, we will define some function that creates and initializes a new object instance. Let's call this function the object _constructor_. You can save the reference to the constructor function which a certain object instance has been created with into that object metatable by using the `setconstructor()` function.
 ```lua
@@ -25,8 +25,7 @@ function A(_aaa)  -- constructor for the objects of class A
   return self
 end
 ```
-The function `setconstructor()`
-
+The function `setconstructor()` saves its second argument in the field `constructor` of the metatable for its first argument (the metatable is created and attached if it doesn't exist yet).
 ```lua
 function B(_aaa, _bbb)  -- constructor for the objects of class B
   local base = A(_aaa)
