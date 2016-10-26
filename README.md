@@ -1,6 +1,6 @@
 ##### oop.lua
 
-Prototype-based style of object-oriented programming can be failry naturally implemented in Lua by means of using the `__index` metamethod. This library provides a few functions that support prototype-based programming in Lua in a straightforward way to keep things clear and simple.
+Prototype-based style of object-oriented programming can be fairly naturally implemented in Lua by means of using the `__index` metamethod. This library provides a few functions that support prototype-based programming in Lua in a straightforward way to keep things clear and simple.
 
 ##### Guide and usage examples
 
@@ -17,14 +17,17 @@ Now we can consider the table `b` as an _object_ that has two _members_: field `
 
 Instead of `setprototype()` you can use the `setcowprototype()` function, which means to set "copy-on-write" prototype. This function is the same as the former one but it does't touch the `__newindex` metamethod. In this case the tables building up the prototype chain can be considered as read only, and every key from these tables while being assigned to is automatically copied into the most outer sub-object beforehand. Keys and values in prototype sub-objects themselves remain unaffected.
 
-Normally, we will define some function that creates and initializes a new object instance. Let's call this function the object _constructor_. You can attach information about the constructor which a certain object instance has been created with to that object by using the `setconstructor()` function.
+Normally, we will define some function that creates and initializes a new object instance. Let's call this function the object _constructor_. You can save the reference to the constructor function which a certain object instance has been created with into that object metatable by using the `setconstructor()` function.
 ```lua
 function A(_aaa)  -- constructor for the objects of class A
   local self = { aaa = _aaa or 111 }
   setconstructor(self, A)
   return self
 end
+```
+The function `setconstructor()`
 
+```lua
 function B(_aaa, _bbb)  -- constructor for the objects of class B
   local base = A(_aaa)
   local self = { bbb = _bbb or 222 }
@@ -73,7 +76,7 @@ That's basically all.
 - `memberpairs(object)`     --> object (including all sub-objects) member iterator --> key, value, sub-object that the pair belongs to
 
 ##### Further documentation
-
+ don't modify tables in any way, don't modify metatables except as described above and don't remove them even if they are becoming empty and were created and set by these functions before.
 
 --
 Copyright (c) 2016 Mikhail Usenko <michaelus@tochka.ru>. All rights reserved.
