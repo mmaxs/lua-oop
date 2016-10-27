@@ -13,11 +13,11 @@ setprototype(b, a)
 ```
 The function `setprototype()` modifies the metatable of the table `b` (or creates and sets a metatable for `b` if it does not exist yet) so that the table `a` becomes the `__index` metamethod. It also sets the `__newindex` metamethod to a function that tracks indexing assignments to the table `b` and dispatches them to existing keys in the table `a` (all the new keys that are not present in `b` nor in `a` are created in the table `b` as per normal).
 
-Now we can consider the table `b` as an _object_ that has two _members_: field `bbb` and field `aaa`. It consists of the two _sub-objects_: the part that is the original table `b` itself with the field `bbb`, and another one disposed as the first item in the _prototype chain_ - the table from the variable `a` with the field `aaa`.
+Now we can consider the table `b` as an _object_ that has two _members_: field `bbb` and field `aaa`. It consists of the two _sub-objects_: the part that is the original table `b` itself with the field `bbb`, and another one disposed as the first item of the _prototype chain_ - the table from the variable `a` with the field `aaa`. The table `b` is the most outer table of the object (the most outer sub-object) and the table `a` is meant to be the prototype chain (consisting of a single item) attached to it.
 
-Instead of `setprototype()` you can use the `setcowprototype()` function, which means to set "copy-on-write" prototype. This function is the same as the former one but it does't touch the `__newindex` metamethod. In this case the tables building up the prototype chain can be considered as read only, and every key from these tables is automatically copied into the most outer sub-object before performing a first assignment operation to it. Keys and values in prototype sub-objects themselves remain unaffected.
+Instead of `setprototype()` you can use the `setcowprototype()` function, which means to set "copy-on-write" prototype. This function is the same as the former one but it does't touch the `__newindex` metamethod. In this case the tables building up the prototype chain can be considered as read only, and every key from these tables is automatically copied into the most outer table of the object before performing a first assignment operation to the key. Keys and values in prototype sub-objects themselves remain unaffected.
 
-Normally, we will define some function that creates and initializes a new object instance. Let's call this function the object _constructor_. You can save the reference to the constructor function which a certain object instance has been created with into that object metatable by using the `setconstructor()` function.
+Normally, we will define some function that creates and initializes new object instances. Let's call this function the object _constructor_. You can save the reference to the constructor function which a certain object instance has been created with into that object metatable by using the `setconstructor()` function.
 ```lua
 function A(_aaa)  -- constructor for the objects of class A
   local self = { aaa = _aaa or 111 }
@@ -57,11 +57,28 @@ local c1, c2 = make_c(), make_c()
 ```
 Note that according to definitions of our example constructor functions, instances `b1` and `b2` will have distinct sub-objects on every level of their prototype chains. Whereas, in contrast, instances `c1` and `c2` will have distinct parts only for the most outer sub-objects in their structure and both have the very same single table `b` as the first item in their prototype chains which is also being set as copy-on-write with `setcowprototype()`.
 
+The function `getconstructor()` is just:
+```lua
+function getconstructor(_object)
+  return rawget(getmetatable(_object) or {}, "constructor")
+end
+```
+And there is a function `getprototype()` which is just:
+```lua
+function getprototype(_object)
+  return rawget(getmetatable(_object) or {}, "__index")
+end
+```
 
-`getprototype()`
-`prototypes()`
+To iterate through the prototype chain use the `prototypes()` function. For example the following code prints all sub-objects that the object `c` consists of:
+```lua
+print(0, c)  -- the most outer table
+for i, p in prototypes(c) do  -- tables in the prototype chain
+  print(i, p)
+end
+```
 
-`memberpairs()`
+There is also the `memberpairs()` function that returns a function iterating through all object members (including all sub-objects). The iterator returns a key-value pair (as actually returned by the standard `next()` function) and the table the pair is originate from as its third return value.
 
 That's basically all.
 
