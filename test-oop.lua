@@ -2,7 +2,7 @@
 
 require "oop"
 
--- setprototype = setweakprototype
+-- setprototype = setcowprototype
 
 
 
@@ -39,7 +39,7 @@ end
 
 
 function printobject(_obj, _prefix)
-  local function print_(_o, _i)
+  local function print_subobject(_o, _i)
     io.write("  sub-object ", _i, " = ", tostring(_o), " {\n")
     for k, v in pairs(_o) do
       io.write("    ", tostring(k), "\t ", tostring(v), "\n")
@@ -48,9 +48,9 @@ function printobject(_obj, _prefix)
   end
 
   io.write(_prefix or "", "{\n")
-  print_(_obj, 0)
+  print_subobject(_obj, 0)
   for i, o in prototypes(_obj) do
-    print_(o, i)
+    print_subobject(o, i)
   end
   io.write("}\n")
 end
@@ -104,10 +104,25 @@ end
 print()
 
 
-local d = setprototype({ jkl = "d" }, C())
-printobject(d)
+local d1, d2 = setcowprototype({ jkl = "d1" }, b), setcowprototype({ jkl = "d2" }, b)
+print(string.format("%-30s%-30s", "d1:", "d2:"))
+print(string.format("%-3d%-27s%-3d%-27s", 0, tostring(d1), 0, tostring(d2)))
+local it1, it2 = prototypes(d1), prototypes(d2)
+while true do
+  local i1, p1 = it1()
+  local i2, p2 = it2()
+  if not (i1 and i2) then break end
 
-local e = getconstructor(b)(111, 222)
-printobject(e)
-
+  if i1 then
+    io.stdout:write(string.format("%-3d%-27s", i1, tostring(p1)))
+  else
+    io.stdout:write(string.format("%-3s%-27s", "-", "-"))
+  end
+  if i2 then
+    io.stdout:write(string.format("%-3d%-27s", i2, tostring(p2)))
+  else
+    io.stdout:write(string.format("%-3s%-27s", "-", "-"))
+  end
+  print()
+end
 
