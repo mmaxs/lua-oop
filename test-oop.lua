@@ -2,8 +2,6 @@
 
 require "oop"
 
--- setprototype = setcowprototype
-
 
 
 function A(_abc)
@@ -126,10 +124,11 @@ while true do
   print()
 end
 
----[[ -- loop in gettable --
+--[[ -- loop in gettable --
 setprototype(a, b)
 setprototype(b, c)
 setprototype(getprototype(getprototype(c)), a)
+print(a.zzz)
 a.zzz = 0
 --]]
 
