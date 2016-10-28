@@ -126,3 +126,10 @@ while true do
   print()
 end
 
+---[[ -- loop in gettable --
+setprototype(a, b)
+setprototype(b, c)
+setprototype(getprototype(getprototype(c)), a)
+a.zzz = 0
+--]]
+
