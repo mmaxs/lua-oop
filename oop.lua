@@ -10,7 +10,7 @@ local function newindex(_t, _k, _v)  -- the handler for __newindex event being s
   while true do  -- look for the key along the prototype chain
     mt = getmetatable(t)
     if not mt then break end
-    tt = rawget(mt, NIL)  -- tracking table of niled fields
+    tt = rawget(mt, NIL)  -- the tracking table of niled fields
     if tt and rawget(tt, _k) then
       exist = true
       is_nil = true
@@ -64,13 +64,22 @@ local function unsetprototype(_object)
   return prototype
 end
 
+local function hasprototype(_self, _subobject)
+  while _self do
+    if _self == _subobject then return true end
+    _self = rawget(getmetatable(_self) or NIL, "__index")
+  end
+  return false
+end
 
---[[ Niled members are tracked properly:
-     on new assignment they will appear in the proper sub-object within the prototype chain. --]]
+
 function setprototype(_self, _prototype)
-  if not _prototype then
+  if _prototype == nil then
     unsetprototype(_self)
     return _self
+  end
+  if hasprototype(_prototype, _self) then
+    error("'setprototype' forbids cycles in prototype chains" ,2)
   end
 
   local mt = getmetatable(_self)
@@ -92,9 +101,12 @@ function setprototype(_self, _prototype)
 end
 
 function setcowprototype(_self, _prototype)
-  if not _prototype then
+  if _prototype == nil then
     unsetprototype(_self)
     return _self
+  end
+  if hasprototype(_prototype, _self) then
+    error("'setcowprototype' forbids cycles in prototype chains" ,2)
   end
 
   local mt = getmetatable(_self)
@@ -132,7 +144,7 @@ end
 function setconstructor(_self, _function)
   local mt = getmetatable(_self)
 
-  if not _function then
+  if _function == nil then
     if mt then
       rawset(mt, "constructor", nil)
     end
