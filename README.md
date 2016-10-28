@@ -11,7 +11,7 @@ local b = { bbb = 222 }
 setprototype(b, a)
 
 ```
-The function `setprototype()` modifies the metatable of the table `b` (or creates and sets a metatable for `b` if it does not exist yet) so that the table `a` becomes the `__index` metamethod. It also sets the `__newindex` metamethod to a function that tracks indexing assignments to the table `b` and dispatches them to existing keys in the table `a` (all the new keys that are not present in `b` nor in `a` are created in the table `b` as per normal).
+The function `setprototype()` modifies the metatable of the table `b` (or creates and sets a metatable for `b` if it does not exist yet) so that the table `a` becomes the `__index` metamethod. It also sets the `__newindex` metamethod to an internal service function that tracks indexing assignments to the table `b` and dispatches them to existing keys in the table `a` (all the new keys that are not present in `b` nor in `a` are created in the table `b` as per normal).
 
 Now we can consider the table `b` as an _object_ that has two _members_: field `bbb` and field `aaa`. It consists of the two _sub-objects_: the part that is the original table `b` itself with the field `bbb`, and another one disposed as the first item of the _prototype chain_ - the table from the variable `a` with the field `aaa`. The table `b` is the most outer table of the object (the most outer sub-object) and the table `a` is meant to be the prototype chain (consisting of a single item) attached to it.
 
@@ -78,7 +78,7 @@ for i, p in prototypes(c) do  -- tables in the prototype chain
 end
 ```
 
-There is also the `memberpairs()` function that returns a function iterating through all object members (including all sub-objects). The iterator returns a key-value pair (as actually returned by the standard `next()` function) and the table the pair is originate from as its third return value.
+There is also the `memberpairs()` function that returns a function iterating through all object members (including all sub-objects). The iterator returns a key-value pair (as being actually returned by the standard `next()` function) and the table the pair is originate from as its third return value.
 
 That's basically all.
 
@@ -90,6 +90,12 @@ That's basically all.
 - `setconstructor(object, constructor)` --> object
 - `getconstructor(object)`              --> object constructor function
 - `memberpairs(object)`     --> object (including all sub-objects) member iterator --> key, value, sub-object that the pair belongs to
+
+##### Special cases
+- Unsetting a prototype can be done by specifying the `nil` vlaue as a second argument to `setprototype()` or `setcowprototype()` functions. The `__index` metamethod will be set to `nil` and in case if the `__newindex` metamethod was assigned to an internal service function by the  `setprototype()` call, it also will be cleared.
+- Removing the `constructor` reference can be performed by passing the `nil` value for the second argument to the `setconstructor()` function.
+- Cycles in the prototype chains are detected early by `setprototype()`/`setcowprototype()` functions, which prevents unpredictable rising the 'loop in gettable' error on attempt of indexing access to nonpresent keys as well as running the programm into an infinite loop on indexing assignment to such a keys.
+- Removing object members by assigning `nil` values to them are properly tracked: on new assignment they will appear in the proper sub-object within the prototype chain, so there is a member possession or the object.
 
 ##### Further documentation
  don't modify tables in any way, don't modify metatables except as described above and don't remove them even if they are becoming empty and were created and set by these functions before.
