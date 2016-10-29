@@ -123,6 +123,7 @@ while true do
   end
   print()
 end
+printobject(d1, "d1 = "); printobject(d2, "d2 = ")
 
 --[[ -- loop in gettable --
 setprototype(a, b)
