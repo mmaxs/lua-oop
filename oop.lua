@@ -1,10 +1,13 @@
 --[[ oop.lua - a support library for prototype-based programming in Lua ]]--
+-- Copyright (c) 2016 Mikhail Usenko <michaelus@tochka.ru>. All rights reserved.
+-- GNU General Public License.
+
 do
 
 
 local NIL = {}  -- to be used as a unique key and as a definitely empty table
 
-local function newindex(_t, _k, _v)  -- the handler for __newindex event being set up by setprototype()
+local function newindex(_t, _k, _v)  -- the handler for __newindex event to be set up by setprototype()
   local t, mt, tt = _t, nil, nil
   local exist, is_nil = false, false
   while true do  -- look for the key along the prototype chain
@@ -60,7 +63,6 @@ local function unsetprototype(_object)
       rawset(mt, "__newindex", nil)
     end
   end
-
   return prototype
 end
 
