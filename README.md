@@ -1,6 +1,6 @@
 ##### oop.lua
 
-Prototype-based style of object-oriented programming can be fairly naturally implemented in Lua by means of using the `__index` metamethod. This library provides a few functions that support prototype-based programming in Lua in a straightforward way to keep things clear and simple.
+The prototype-based style of object-oriented programming can be fairly naturally implemented in Lua by means of using the `__index` metamethod. This library provides a few functions that support prototype-based programming in Lua in a straightforward way to keep things clear and simple.
 
 ##### Guide and usage examples
 
@@ -98,7 +98,7 @@ That's basically all.
 - For the objects composed with `setprototype()` function, removing object members by assigning `nil` values to them are properly tracked: on a new assignment to the deleted keys in the subsequent, they will appear in the proper sub-object within the prototype chain - in that sub-object which they belonged to prior to be removed rather than in the most outer table as any other newly created keys. Thus, every sub-object continue to possess its members which is intuitively expectable object behavior and is similar to as it in other fully-featured OOP languages. The `__newindex` metamethod handler set by the `setprototype()` function implements this feature by utilizing and maintaining a dedicated list of niled keys. When necessary these lists are allocated in the sub-object metatables with a knowingly unique key.
 
 ##### Further documentation
-There is nothing else worth to be mentioned about, see the source file - *oop.lua* to get more in details. The code is simple and will tell more than any sort of descriptions. As a general guideline just remember that library functions don't modify tables themselves in any way, don't modify metatables except as described above and don't remove them even if they are becoming empty and were actually created and set by these functions previously.
+There is nothing else worth to be mentioned about, see the source file - *oop.lua* to get more in details. The code is simple and will tell more than any sort of descriptions. As a general guideline just remember that the library functions don't modify tables themselves in any way, don't modify metatables except as described above and don't remove them even if they are becoming empty and were actually created and set by these functions previously.
 
 --
 Copyright (c) 2016 Mikhail Usenko <michaelus@tochka.ru>. All rights reserved.
