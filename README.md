@@ -27,7 +27,7 @@ end
 ```
 The function `setconstructor()` saves its second argument in the field `constructor` of the metatable for its first argument (the metatable is created and attached if it doesn't exist yet).
 ```lua
-function B(_aaa, _bbb)  -- constructor for the objects of class B
+function B(_aaa, _bbb)  -- constructor for the objects of class B "derived from the class A"
   local base = A(_aaa)
   local self = { bbb = _bbb or 222 }
   setprototype(self, base)
@@ -36,7 +36,7 @@ function B(_aaa, _bbb)  -- constructor for the objects of class B
 end
 
 local b = B(1, 2)
-function C(_ccc)  -- constructor for the objects of class C written in less verbose manner
+function C(_ccc)  -- constructor for the objects of class C "prototyped from the object b" (written in less verbose manner)
   return setconstructor(
       setcowprototype({ ccc = _ccc or 3 }, b),
       C
@@ -55,7 +55,7 @@ local make_c = getconstructor(c)
 local c1, c2 = make_c(), make_c()
 
 ```
-Note that according to definitions of our example constructor functions, instances `b1` and `b2` will have distinct sub-objects on every level of their prototype chains. Whereas, in contrast, instances `c1` and `c2` will have distinct parts only for the most outer sub-objects in their structure and both have the very same single table `b` as the first item in their prototype chains which is also being set as copy-on-write with `setcowprototype()`.
+Note that according to definitions of our example constructor functions, instances `b`, `b1` and `b2` will have distinct sub-objects on every level of their prototype chains. Whereas, in contrast, instances `c`, `c1` and `c2` will have distinct parts only for the most outer sub-objects in their structure and both have the very same single table from the variable `b` as the first item in their prototype chains which is also being set as copy-on-write with `setcowprototype()`.
 
 The function `getconstructor()` is just:
 ```lua
@@ -82,7 +82,7 @@ There is also the `memberpairs()` function that returns a function iterating thr
 
 That's basically all.
 
-##### The full list of the library functions and what they return
+##### The full list of library functions and what they return
 - `setprototype(object, prototype)`     --> object
 - `setcowprototype(object, prototype)`  --> object
 - `getprototype(object)`    --> object prototype
