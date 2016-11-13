@@ -55,7 +55,7 @@ local make_c = getconstructor(c)
 local c1, c2 = make_c(), make_c()
 
 ```
-Note that according to definitions of our example constructor functions, instances `b`, `b1` and `b2` will have distinct sub-objects on every level of their prototype chains. Whereas, in contrast, instances `c`, `c1` and `c2` will have distinct parts only for the most outer sub-objects in their structure and both have the very same single table from the variable `b` as the first item in their prototype chains which is also being set as copy-on-write with `setcowprototype()`.
+Note that according to definitions of our example constructor functions, instances `b`, `b1` and `b2` will have distinct sub-objects on every level of their prototype chains. Whereas, in contrast, instances `c`, `c1` and `c2` will have distinct parts only for the most outer sub-objects in their structure and three have the very same single table from the variable `b` as the first item in their prototype chains which is also being set as copy-on-write with `setcowprototype()`.
 
 The function `getconstructor()` is just:
 ```lua
