@@ -133,3 +133,16 @@ print(a.zzz)
 a.zzz = 0
 --]]
 
+
+print()
+
+local a = { "a" }
+local b = {}
+local c = { "c" }
+setprototype(c, setprototype(b, a))
+
+print("memberpairs(c):")
+for k, v, t in memberpairs(c) do
+  print(k, v, "(sub-object "..tostring(t)..")")
+end
+

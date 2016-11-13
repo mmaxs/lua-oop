@@ -172,11 +172,11 @@ function memberpairs(_object)
 
   local function nextmemberpair()
     local v = nil
-    k, v = next(t, k)
-    if k == nil then
+    while t ~= nil do
+      k, v = next(t, k)
+      if k ~= nil then break end
       local mt = getmetatable(t)
       t = mt and rawget(mt, "__index")
-      if t then k, v = next(t) end
     end
     return k, v, t
   end
