@@ -81,7 +81,7 @@ function setprototype(_self, _prototype)
     return _self
   end
   if hasprototype(_prototype, _self) then
-    error("'setprototype' forbids cycles in prototype chains" ,2)
+    error("'setprototype' forbids cycles in the prototype chain", 2)
   end
 
   local mt = getmetatable(_self)
@@ -108,7 +108,7 @@ function setcowprototype(_self, _prototype)
     return _self
   end
   if hasprototype(_prototype, _self) then
-    error("'setcowprototype' forbids cycles in prototype chains" ,2)
+    error("'setcowprototype' forbids cycles in the prototype chain", 2)
   end
 
   local mt = getmetatable(_self)
